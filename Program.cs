@@ -7,6 +7,7 @@ namespace MiniProject_Stack
 {
     class Program
     {
+        // Tools
         static Stack<string> DuplicateStackStr(Stack<string> First)
         {
             Stack<string> New = new Stack<string>();
@@ -24,19 +25,6 @@ namespace MiniProject_Stack
 
             return New;
         } //OK
-        static void Error(string Message)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(Message);
-            Console.ForegroundColor = ConsoleColor.White;
-        } // OK
-        static void MyTest(int Number)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Test: " + Number);
-            Console.ForegroundColor = ConsoleColor.White;
-
-        } //OK
         static Stack<string> InverseStackStr(Stack<string> InpFirst)
         {
             Stack<string> First = DuplicateStackStr(InpFirst);
@@ -47,14 +35,47 @@ namespace MiniProject_Stack
             }
             return Result;
         }  //OK
-        static bool IsExit(string Inp)
+        static Stack<string> InsertScoreOptions(Stack<string> Phrase)
         {
-            if (Inp.ToUpper() == "EXIT")
+            string[] Ops = new string[2] { "+", "-" };
+            Stack<string> Result = new Stack<string>();
+            Stack<string> Temp = new Stack<string>();
+            // +phrase
+            if (Ops.Contains(Phrase.Peek()))
             {
-                return true;
+                Phrase.Push("0");
             }
-            return false;
-        } //OK
+            Temp.Push(Phrase.Pop());
+            while (Phrase.Count() > 0)
+            {
+                // (+
+                if (Temp.Peek() == "(" & Ops.Contains(Phrase.Peek()))
+                {
+                    Temp.Push("0");
+                }
+                // )( , num( , )num
+                if ((Temp.Peek() == ")" & Phrase.Peek() == "(") || (IsNumber(Temp.Peek()) & Phrase.Peek() == "(") || (IsNumber(Phrase.Peek()) & Temp.Peek() == ")"))
+                {
+                    Temp.Push("*");
+                }
+                // num! num!
+                if (Temp.Peek() == "!" & IsNumber(Phrase.Peek()))
+                {
+                    Temp.Push("*");
+                }
+                // num num
+                if (IsNumber(Temp.Peek()) & IsNumber(Phrase.Peek()))
+                {
+                    Temp.Push("*");
+                }
+                Temp.Push(Phrase.Pop());
+            }
+            while (Temp.Count() > 0)
+            {
+                Result.Push(Temp.Pop());
+            }
+            return Result;
+        } // OK
         static Stack<string> SeparatePhrase(string Phrase)
         {
             string[] Chars = new string[Phrase.Length];
@@ -122,52 +143,131 @@ namespace MiniProject_Stack
             }
             return Result;
         } //OK after controling chars
+        // Calcs
         static Stack<string> FactorielCalc(Stack<string> Inp)
         {
             Stack<string> Phrase = DuplicateStackStr(Inp);
             Stack<string> Temp = new Stack<string>();
             // !
-            while (Phrase.Count() > 1)
+            Temp.Push(Phrase.Pop());
+            while (Phrase.Count() > 0)
             {
-                Temp.Push(Phrase.Pop());
-                if (Phrase.Count() > 0)
+                if (Phrase.Peek() == "!")
                 {
-                    if (Phrase.Peek() == "!")
-                    {
-                        Phrase.Pop();
-                        Temp.Push(Convert.ToString(Factoriel(Convert.ToDouble(Temp.Pop()))));
-                    }
+                    Phrase.Pop();
+                    Temp.Push(Convert.ToString(Factoriel(Convert.ToDouble(Temp.Pop()))));
+                    continue;
                 }
+                Temp.Push(Phrase.Pop());
             }
             if (Phrase.Count() == 1)
             { Temp.Push(Phrase.Pop()); }
             Temp = InverseStackStr(Temp);
-            Temp = InsertScoreOptions(Temp);
             return Temp;
-        }
-        static Stack<string> SumMinusCalc (Stack<string> Inp)
+        } //OK
+        static Stack<string> SumMinusCalc(Stack<string> Inp)
         {
             Stack<string> Phrase = DuplicateStackStr(Inp);
             Stack<string> Temp = new Stack<string>();
-            while (Phrase.Count()>1)
-            {
+            if (Phrase.Count() > 1)
                 Temp.Push(Phrase.Pop());
+            while (Phrase.Count() > 1)
+            {
+
                 if (Phrase.Peek() == "+")
                 {
                     Phrase.Pop();
-                    Temp.Push(Convert.ToString(Convert.ToDouble(Phrase.Pop()) + Convert.ToDouble(Temp.Pop())));
-
+                    Temp.Push(Convert.ToString(Convert.ToDouble(Temp.Pop()) + Convert.ToDouble(Phrase.Pop())));
+                    continue;
                 }
-                else if (Phrase.Peek() == "-")
+                if (Phrase.Peek() == "-")
                 {
                     Phrase.Pop();
                     Temp.Push(Convert.ToString(Convert.ToDouble(Temp.Pop()) - Convert.ToDouble(Phrase.Pop())));
+                    continue;
                 }
+                Temp.Push(Phrase.Pop());
             }
-            Temp.Push(Phrase.Pop());
+            if (Phrase.Count() > 0)
+                Temp.Push(Phrase.Pop());
+
             Temp = InverseStackStr(Temp);
             return Temp;
-        }
+        } //OK
+        static Stack<string> MultDiveCalc(Stack<string> Inp)
+        {
+            Stack<string> Phrase = DuplicateStackStr(Inp);
+            Stack<string> Temp = new Stack<string>();
+            if (Phrase.Count() > 1)
+                Temp.Push(Phrase.Pop());
+            while (Phrase.Count() > 1)
+            {
+
+                if (Phrase.Peek() == "*")
+                {
+                    Phrase.Pop();
+                    Temp.Push(Convert.ToString(Convert.ToDouble(Temp.Pop()) * Convert.ToDouble(Phrase.Pop())));
+                    continue;
+                }
+                if (Phrase.Peek() == "/")
+                {
+                    Phrase.Pop();
+                    Temp.Push(Convert.ToString(Convert.ToDouble(Temp.Pop()) / Convert.ToDouble(Phrase.Pop())));
+                    continue;
+                }
+                Temp.Push(Phrase.Pop());
+            }
+            if (Phrase.Count() > 0)
+                Temp.Push(Phrase.Pop());
+
+            Temp = InverseStackStr(Temp);
+            return Temp;
+        } //OK
+        static Stack<string> PowerCalc(Stack<string> Inp)
+        {
+            Stack<string> Phrase = InverseStackStr(DuplicateStackStr(Inp));
+            Stack<string> Temp = new Stack<string>();
+                Temp.Push(Phrase.Pop());
+            while (Phrase.Count() > 1)
+            {
+                if (Phrase.Peek() == "^")
+                {
+                    Phrase.Pop();
+                    Temp.Push(Convert.ToString(Math.Pow(Convert.ToDouble(Phrase.Pop()), Convert.ToDouble(Temp.Pop()))));
+                    continue;
+                }
+                Temp.Push(Phrase.Pop());
+            }
+            if (Phrase.Count() == 1)
+            {
+                Temp.Push(Phrase.Pop());
+            }
+            return Temp;
+        } //OK
+        static double Factoriel(double x)
+        {
+            double Result = 1;
+            for (int i = 1; i < x + 1; i++)
+            {
+                Result *= i;
+            }
+            return Result;
+        } //OK
+        // Controls
+        static void Error(string Message)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(Message);
+            Console.ForegroundColor = ConsoleColor.White;
+        } // OK
+        static bool IsExit(string Inp)
+        {
+            if (Inp.ToUpper() == "EXIT")
+            {
+                return true;
+            }
+            return false;
+        } //OK
         static bool ControlSyntax(Stack<string> Phrase1)
         {
             Stack<string> Phrase = DuplicateStackStr(Phrase1);
@@ -177,7 +277,6 @@ namespace MiniProject_Stack
             // *,/,...  phrase
             if ((Operators.Contains(Words.Peek()) & Words.Peek() != "+" & Words.Peek() != "-") || Words.Peek() == "!")
             {
-                MyTest(1);
                 return false;
             }
             HalfTwo.Push(Words.Pop());
@@ -186,31 +285,21 @@ namespace MiniProject_Stack
                 // ()
                 if (Words.Peek() == ")" & HalfTwo.Peek() == "(")
                 {
-                    MyTest(2);
                     return false;
                 }
                 // +-
                 if ((Operators.Contains(Words.Peek()) & Operators.Contains(HalfTwo.Peek())) || (Words.Peek() == "!") & HalfTwo.Peek() == "!")
                 {
-                    MyTest(3);
                     return false;
                 }
                 // +)
                 if (Words.Peek() == ")" & Operators.Contains(HalfTwo.Peek()))
                 {
-                    MyTest(4);
-                    return false;
-                }
-                // (pi,e) num , num (pi,e) , X! y!
-                if (IsNumber(Words.Peek()) & IsNumber(HalfTwo.Peek()))
-                {
-                    MyTest(5);
                     return false;
                 }
                 // +!
                 if (Words.Peek() == "!" & Operators.Contains(HalfTwo.Peek()))
                 {
-                    MyTest(8);
                     return false;
                 }
                 HalfTwo.Push(Words.Pop());
@@ -218,67 +307,10 @@ namespace MiniProject_Stack
             // phrase +,-,...
             if (Operators.Contains(HalfTwo.Peek()))
             {
-                MyTest(6);
                 return false;
             }
             return true;
         } //OK
-        static double Calculate(Stack<string> PhraseInp)
-        {
-            double Result = 0;
-            Stack<string> Phrase = DuplicateStackStr(PhraseInp);
-            Stack<string> Temp = new Stack<string>();
-            bool IsStarted = false;
-            int PharantheseSize = 0;
-            int Pharantheses = 0;
-            while (Phrase.Count() > 0)
-            {
-                Temp.Push(Phrase.Pop());
-                if (Temp.Peek() == "(")
-                {
-                    Pharantheses++;
-                    IsStarted = true;
-                }
-                else if (Temp.Peek() == ")")
-                {
-                    Pharantheses--;
-                }
-                if (IsStarted)
-                {
-                    PharantheseSize++;
-                }
-                if (Pharantheses == 0 & IsStarted)
-                {
-                    Stack<string> Temp2 = new Stack<string>();
-                    Temp.Pop();
-                    for (int i = 0; i < PharantheseSize - 1; i++)
-                    {
-                        Temp2.Push(Temp.Pop());
-                    }
-                    Temp.Pop();
-                    Temp.Push(Convert.ToString(Calculate(Temp2)));
-                    PharantheseSize = 0;
-                    IsStarted = false;
-                }
-            }
-            Result = CalculateSimple(InverseStackStr(Temp));
-            return Result;
-        }
-        static double CalculateSimple (Stack<string> Inp)
-        {
-            double Res = 0;
-            Stack<string> Phrase = DuplicateStackStr(Inp);
-            return Res;
-        }
-        static double Factoriel(double x)
-        {
-            double Result = 1;
-            for (int i = 1; i < x + 1; i++)
-            {
-                Result *= i;
-            }
-            return Result;
-        } 
         static bool ControlPrantheses(string Phrase)
         {
             Stack<string> InputStk = new Stack<string>();
@@ -345,43 +377,60 @@ namespace MiniProject_Stack
         {
             double y;
             return double.TryParse(x, out y);
-        }
-        static Stack<string> InsertScoreOptions(Stack<string> Phrase)
+        } //OK
+        // Main fanctions
+        static double Calculate(Stack<string> PhraseInp)
         {
-            string[] Ops = new string[2] { "+", "-" };
-            Stack<string> Result = new Stack<string>();
+            double Result = 0;
+            Stack<string> Phrase = DuplicateStackStr(PhraseInp);
             Stack<string> Temp = new Stack<string>();
-            // +phrase
-            if (Ops.Contains(Phrase.Peek()))
-            {
-                Phrase.Push("0");
-            }
-            Temp.Push(Phrase.Pop());
+            bool IsStarted = false;
+            int PharantheseSize = 0;
+            int Pharantheses = 0;
             while (Phrase.Count() > 0)
             {
-                // (+
-                if (Temp.Peek() == "(" & Ops.Contains(Phrase.Peek()))
-                {
-                    Temp.Push("0");
-                }
-                // )( , num( , )num
-                if ((Temp.Peek() == ")" & Phrase.Peek() == "(") || (IsNumber(Temp.Peek()) & Phrase.Peek() == "(") || (IsNumber(Phrase.Peek()) & Temp.Peek() == ")"))
-                {
-                    Temp.Push("*");
-                }
-                // num! num!
-                if (Temp.Peek()=="!"&IsNumber(Phrase.Peek()))
-                {
-                    Temp.Push("*");
-                }
                 Temp.Push(Phrase.Pop());
+                if (Temp.Peek() == "(")
+                {
+                    Pharantheses++;
+                    IsStarted = true;
+                }
+                else if (Temp.Peek() == ")")
+                {
+                    Pharantheses--;
+                }
+                if (IsStarted)
+                {
+                    PharantheseSize++;
+                }
+                if (Pharantheses == 0 & IsStarted)
+                {
+                    Stack<string> Temp2 = new Stack<string>();
+                    Temp.Pop();
+                    for (int i = 0; i < PharantheseSize - 2; i++)
+                    {
+                        Temp2.Push(Temp.Pop());
+                    }
+                    Temp.Pop();
+                    Temp.Push(Convert.ToString(Calculate(Temp2)));
+                    PharantheseSize = 0;
+                    IsStarted = false;
+                }
             }
-            while (Temp.Count() > 0)
-            {
-                Result.Push(Temp.Pop());
-            }
+            Result = CalculateSimple(InverseStackStr(Temp));
             return Result;
-        }
+        } //OK
+        static double CalculateSimple(Stack<string> Inp)
+        {
+            double Res = 0;
+            Stack<string> Phrase = DuplicateStackStr(Inp);
+            Phrase = FactorielCalc(Phrase);
+            Phrase = PowerCalc(Phrase);
+            Phrase = MultDiveCalc(Phrase);
+            Phrase = SumMinusCalc(Phrase);
+            Res = Convert.ToDouble(Phrase.Pop());
+            return Res;
+        } //OK
         static void Main(string[] args)
         {
             //معرفی پروژه 
@@ -407,13 +456,10 @@ namespace MiniProject_Stack
                             if (ControlSyntax(Separated))
                             {
                                 Separated = InsertScoreOptions(Separated);
-                                //Console.Clear();
-                                while (Separated.Count() > 0)
-                                {
-                                    Console.WriteLine(Separated.Pop());
-                                }
+                                Console.Clear();
+                                Console.WriteLine("\nThe Answer of: [" + Phrase + "]");
                                 double Result = Calculate(Separated);
-                                Console.WriteLine("\nThe Answer is:  " + Result + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPress Enter to claculate another phrase");
+                                Console.WriteLine("\nis:  " + Result + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPress Enter to claculate another phrase");
                             }
                             else
                             {
@@ -436,4 +482,3 @@ namespace MiniProject_Stack
         }
     }
 }
-
